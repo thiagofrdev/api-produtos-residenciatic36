@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BackEnd.Context;
 using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.Controllers
 {
@@ -22,9 +23,10 @@ namespace BackEnd.Controllers
 
         //Rota para pegar todos os Clientes
         [HttpGet]
-        public ActionResult<IEnumerable<Cliente>> GetAllClientes()
+        public async Task<ActionResult<IEnumerable<Cliente>>> GetAllClientes()
         {
-            var clientes = _context.Clientes.ToList(); //Pega todos os clientes e transforma numa lista
+            // Usa ToListAsync para buscar todos os clientes de forma assíncrona e evitar bloqueio de thread
+            var clientes = await _context.Clientes.ToListAsync();
 
             //Verifica se a lista está vazia
             if (clientes is null)
@@ -36,10 +38,10 @@ namespace BackEnd.Controllers
 
         //Rota para pegar um cliente pelo seu ID
         [HttpGet("{id:int}")]
-        public ActionResult<IEnumerable<Cliente>> GetClienteById(int id)
+        public async Task<ActionResult<Cliente>> GetClienteById(int id)
         {
-            //Pega o cliente
-            var cliente = _context.Clientes.FirstOrDefault(c => c.IdCliente == id);
+            // Usa FirstOrDefaultAsync para buscar o cliente pelo ID de forma assíncrona
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.IdCliente == id);
 
             //Verifica se a variável está vazia
             if (cliente is null)
@@ -51,56 +53,64 @@ namespace BackEnd.Controllers
 
         //Rota para adicionar um novo cliente
         [HttpPost]
-        public ActionResult<IEnumerable<Cliente>> AddNewCliente(Cliente cliente)
+        public async Task<ActionResult<Cliente>> AddNewCliente(Cliente cliente)
         {
-            if (ClienteExiste(cliente))
+            // Usa o método assíncrono ClienteExisteAsync para verificar a existência do cliente sem bloquear a execução
+            if (await ClienteExisteAsync(cliente))
             {
                 return BadRequest("Esse cliente já existe com o mesmo ID ou Nome");
             }
 
             _context.Clientes.Add(cliente);
-            _context.SaveChanges();
+            // Usa SaveChangesAsync para salvar as mudanças no banco de dados de forma assíncrona
+            await _context.SaveChangesAsync();
 
             return Ok("Novo cleinte criado");
         }
 
         //Método para atualizar um cliente existente
         [HttpPut("{id:int}")]
-        public ActionResult<IEnumerable<Cliente>> UpdateCliente(int id, Cliente cliente)
+        public async Task<ActionResult<Cliente>> UpdateCliente(int id, Cliente cliente)
         {
-            if (!ClienteExiste(id))
+            // Usa o método assíncrono ClienteExisteAsync para verificar se o cliente existe
+            if (!await ClienteExisteAsync(id))
             {
                 return NotFound("Cliente não encontrado");
             }
 
             _context.Clientes.Update(cliente);
-            _context.SaveChanges();
+            // Usa SaveChangesAsync para salvar as alterações de forma assíncrona
+            await _context.SaveChangesAsync();
             
             return Ok("Alterações gravadas");        
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<IEnumerable<Cliente>> DeleteCliente(int id, Cliente cliente)
+        public async Task<ActionResult<Cliente>> DeleteCliente(int id, Cliente cliente)
         {
-            if (!ClienteExiste(id))
+            // Usa o método assíncrono ClienteExisteAsync para verificar se o cliente existe
+            if (!await ClienteExisteAsync(id))
             {
                 return NotFound("Cliente não encontrado");
             }
 
             _context.Clientes.Remove(cliente);
-            _context.SaveChanges();
+            // Usa SaveChangesAsync para deletar o cliente de forma assíncrona
+            await _context.SaveChangesAsync();
 
             return Ok("Cliente removido com sucesso");
         }
 
-        private bool ClienteExiste(Cliente cliente)
+        // Método privado assíncrono para verificar se o cliente já existe com base em suas propriedades
+        private async Task<bool> ClienteExisteAsync(Cliente cliente)
         {
-            return _context.Clientes.Any(c => c.IdCliente == cliente.IdCliente || c.NomeCliente == cliente.NomeCliente);
+            return await _context.Clientes.AnyAsync(c => c.IdCliente == cliente.IdCliente || c.NomeCliente == cliente.NomeCliente);
         }
 
-        private bool ClienteExiste(int id)
+        // Método privado assíncrono para verificar se um cliente com o ID fornecido existe
+        private async Task<bool> ClienteExisteAsync(int id)
         {
-            return _context.Clientes.Any(t => t.IdCliente != id);
+            return await _context.Clientes.AnyAsync(t => t.IdCliente == id);
         }
     }
 }
