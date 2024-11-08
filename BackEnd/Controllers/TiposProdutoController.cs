@@ -91,7 +91,7 @@ namespace BackEnd.Controllers
             // Salva as mudanças de forma assíncrona após a remoção
             await _context.SaveChangesAsync();
 
-            return Ok(new RespostaRequisicao<TipoProduto>("Tipo removido com sucesso", tipo));
+            return Ok(new RespostaRequisicao<TipoProduto>("Tipo removido com sucesso", null));
         }
 
         // Método privado assíncrono para verificar se o TipoProduto existe com base no ID ou Nome

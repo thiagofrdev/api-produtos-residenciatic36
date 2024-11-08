@@ -38,75 +38,88 @@ namespace BackEnd.Controllers
 
         //Rota para pegar um pedido pelo seu ID
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Pedido>> GetPedidoById(int id)
+        public async Task<ActionResult<RespostaRequisicao<Pedido>>> GetPedidoById(int id)
         {
             //Usando FindAsync para buscar o pedido pelo ID de forma assíncrona
-            var pedido = await _context.Pedidos.FindAsync(id);
+            var pedido = await _context.Pedidos.FirstOrDefaultAsync(p => p.IdPedido == id);
             
             //Verifica se a variável está vazia
             if (pedido is null)
             {
-                return NotFound($"O pedido {id} não existe");
+                return NotFound(new RespostaRequisicao<Pedido>($"O pedido com o id \"{id}\" não foi encontrado na base de dados", null));
             }
-            return new CreatedAtRouteResult(new { id = pedido.IdPedido }, pedido);
+            return Ok(new RespostaRequisicao<Pedido>($"Pedido {id} encontrado com sucesso", pedido));
         }
 
         //Rota para adicionar um novo pedido
         [HttpPost("{id:int}")]
-        public async Task<ActionResult<Pedido>> AddNewPedido(int id, Pedido pedido)
+        public async Task<ActionResult<RespostaRequisicao<Pedido>>> AddNewPedido(int id, Pedido pedido)
         {
             //Usando o método assíncrono PedidoExisteAsync para verificar a existência do pedido
             if (await PedidoExisteAsync(id))
             {
-                return BadRequest($"Já existe um pedido com o id {id}");
+                return BadRequest(new RespostaRequisicao<Pedido>($"Já existe um pedido com o mesmo ID \"{id}\"", null));
             }
 
             _context.Pedidos.Add(pedido);
             //Usando SaveChangesAsync para salvar as mudanças de forma assíncrona
             await _context.SaveChangesAsync();
 
-            return Ok($"Pedido {id} criado com sucesso");
+            return Ok(new RespostaRequisicao<Pedido>("Novo produto adicionado com sucesso!", pedido));
         }
 
         //Método para atualizar um pedido existente
         [HttpPut("{id:int}")]
-        public async Task<ActionResult<Pedido>> UpdatePedido(int id, Pedido pedido)
+        public async Task<ActionResult<RespostaRequisicao<Pedido>>> UpdatePedido(int id, Pedido pedido)
         {
             if (!await PedidoExisteAsync(id))
             {
-                return NotFound($"O pedido {id} não foi encontrado");
+                return NotFound(new RespostaRequisicao<Pedido>($"Pedido com ID {id} não encontrado", null));
             }
 
             _context.Pedidos.Update(pedido);
              //Usando SaveChangesAsync para salvar as alterações de forma assíncrona
             await _context.SaveChangesAsync();
             
-            return Ok($"Alterações gravadas no pedido {id}");        
+            return Ok(new RespostaRequisicao<Pedido>($"Alterações no pedido {id} gravadas com sucesso!", pedido));       
         }
 
         //Método para deletar um pedido
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Pedido>> DeletePedido(int id)
+        public async Task<ActionResult<RespostaRequisicao<Pedido>>> DeletePedido(int id)
         {
             //Usando FindAsync para buscar o pedido pelo ID de forma assíncrona
             var pedido = await _context.Pedidos.FindAsync(id);
 
             if (pedido is null)
             {
-                return NotFound($"O pedido {id} não foi encontrado");
+                return NotFound(new RespostaRequisicao<Pedido>($"Pedido com ID {id} não encontrado", null));
             }
 
             _context.Pedidos.Remove(pedido);
             //Usando SaveChangesAsync para deletar o pedido de forma assíncrona
             await _context.SaveChangesAsync();
 
-            return Ok($"Pedido {id} removido com sucesso");
+            return Ok(new RespostaRequisicao<Pedido>($"Pedido {id} removido com sucesso", null));
         }
 
         //Método privado assíncrono para verificar se o pedido existe no banco de dados com base no ID
         private async Task<bool> PedidoExisteAsync(int id)
         {
             return await _context.Pedidos.AnyAsync(p => p.IdPedido != id);
+        }
+
+        //Classe auxiliar para definir a estrutura de resposta
+        public class RespostaRequisicao<R>
+        {
+            public string Message { get; set; }
+            public R Data { get; set; }
+
+            public RespostaRequisicao(string message, R data)
+            {
+                Message = message;
+                Data = data;
+            }
         }
     }
 }
