@@ -32,66 +32,66 @@ namespace BackEnd.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<TipoProduto>> GetTipoProdutoById(int id)
+        public async Task<ActionResult<RespostaRequisicao<TipoProduto>>> GetTipoProdutoById(int id)
         {
             // Usa FirstOrDefaultAsync para buscar o tipo de produto pelo ID de forma assíncrona
             var tipo = await _context.TiposProduto.FirstOrDefaultAsync(t => t.IdTipo == id);
 
             if (tipo is null)
             {
-                return NotFound($"O tipo com o id \"{id}\" não encontrado na base de dados");
+                return NotFound(new RespostaRequisicao<TipoProduto>($"O tipo com o id \"{id}\" não foi encontrado na base de dados", null));
             }
-            return Ok(tipo);
+            return Ok(new RespostaRequisicao<TipoProduto>("Tipo encontrado com sucesso", tipo));
         }
 
         [HttpPost]
-        public async Task<ActionResult> AddNewTipoProduto(TipoProduto tipo)
+        public async Task<ActionResult<RespostaRequisicao<TipoProduto>>> AddNewTipoProduto(TipoProduto tipo)
         {
             // Verifica se o tipo já existe usando o método assíncrono TipoExisteAsync
             if (await TipoExisteAsync(tipo))
             {
-                return BadRequest("Tipo de produto já existe com o mesmo ID ou Nome");
+                return BadRequest(new RespostaRequisicao<TipoProduto>("Tipo de produto já existe com o mesmo ID ou Nome", null));
             }
 
             _context.TiposProduto.Add(tipo);
             // Salva o novo tipo de produto de forma assíncrona
             await _context.SaveChangesAsync();
 
-            return Ok("Novo tipo adicionado");
+            return Ok(new RespostaRequisicao<TipoProduto>("Novo tipo adicionado com sucesso!", tipo));
         }
 
         [HttpPut]
-        public async Task<ActionResult> UpdateTipoProduto(int id, TipoProduto tipo)
+        public async Task<ActionResult<RespostaRequisicao<TipoProduto>>> UpdateTipoProduto(int id, TipoProduto tipo)
         {
             // Verifica se o tipo existe usando o método assíncrono TipoExisteAsync
             if (!await TipoExisteAsync(id))
             {
-               return NotFound("Tipo não encontrado"); 
+               return NotFound(new RespostaRequisicao<TipoProduto>("Tipo não encontrado", null));
             }
 
             _context.TiposProduto.Update(tipo);
             // Salva as alterações de forma assíncrona
             await _context.SaveChangesAsync();
             
-            return Ok("Alterações gravadas"); 
+            return Ok(new RespostaRequisicao<TipoProduto>("Alterações gravadas com sucesso!", tipo));
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteProduct(int id)
+        public async Task<ActionResult<RespostaRequisicao<TipoProduto>>> DeleteProduct(int id)
         {
             // Busca o tipo de produto pelo ID usando FindAsync
             var tipo = await _context.TiposProduto.FindAsync(id);
 
             if (tipo is null)
             {
-                return NotFound("Tipo não encontrado");
+                return NotFound(new RespostaRequisicao<TipoProduto>("Tipo não encontrado", null));
             }
 
             _context.TiposProduto.Remove(tipo);
             // Salva as mudanças de forma assíncrona após a remoção
             await _context.SaveChangesAsync();
 
-            return Ok("Tipo removido com sucesso");
+            return Ok(new RespostaRequisicao<TipoProduto>("Tipo removido com sucesso", tipo));
         }
 
         // Método privado assíncrono para verificar se o TipoProduto existe com base no ID ou Nome
@@ -104,6 +104,19 @@ namespace BackEnd.Controllers
         private async Task<bool> TipoExisteAsync(int id)
         {
             return await _context.TiposProduto.AnyAsync(t => t.IdTipo == id);
+        }
+
+        //Classe auxiliar para definir a estrutura de resposta
+        public class RespostaRequisicao<R>
+        {
+            public string Message { get; set; }
+            public R Data { get; set; }
+
+            public RespostaRequisicao(string message, R data)
+            {
+                Message = message;
+                Data = data;
+            }
         }
     }
 }
