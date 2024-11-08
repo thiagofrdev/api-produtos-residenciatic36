@@ -19,9 +19,10 @@ namespace BackEnd.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<TipoProduto>> GetAllTipoProduto()
+        public async Task<ActionResult<IEnumerable<TipoProduto>>> GetAllTipoProduto()
         {
-            var tipos = _context.TiposProduto.ToList();
+            // Usa ToListAsync para buscar todos os tipos de produtos de forma assíncrona
+            var tipos = await _context.TiposProduto.ToListAsync();
 
             if (tipos is null)
             {
@@ -31,9 +32,10 @@ namespace BackEnd.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<IEnumerable<TipoProduto>> GetTipoProdutoById(int id)
+        public async Task<ActionResult<TipoProduto>> GetTipoProdutoById(int id)
         {
-            var tipo = _context.TiposProduto.FirstOrDefault(t => t.IdTipo == id);
+            // Usa FirstOrDefaultAsync para buscar o tipo de produto pelo ID de forma assíncrona
+            var tipo = await _context.TiposProduto.FirstOrDefaultAsync(t => t.IdTipo == id);
 
             if (tipo is null)
             {
@@ -43,55 +45,65 @@ namespace BackEnd.Controllers
         }
 
         [HttpPost]
-        public ActionResult<IEnumerable<TipoProduto>> AddNewTipoProduto(TipoProduto tipo)
+        public async Task<ActionResult> AddNewTipoProduto(TipoProduto tipo)
         {
-            if (TipoExiste(tipo))
+            // Verifica se o tipo já existe usando o método assíncrono TipoExisteAsync
+            if (await TipoExisteAsync(tipo))
             {
                 return BadRequest("Tipo de produto já existe com o mesmo ID ou Nome");
             }
 
             _context.TiposProduto.Add(tipo);
-            _context.SaveChanges();
+            // Salva o novo tipo de produto de forma assíncrona
+            await _context.SaveChangesAsync();
 
             return Ok("Novo tipo adicionado");
         }
 
         [HttpPut]
-        public ActionResult<IEnumerable<TipoProduto>> UpdateTipoProduto(int id, TipoProduto tipo)
+        public async Task<ActionResult> UpdateTipoProduto(int id, TipoProduto tipo)
         {
-            if (!TipoExiste(id))
+            // Verifica se o tipo existe usando o método assíncrono TipoExisteAsync
+            if (!await TipoExisteAsync(id))
             {
                return NotFound("Tipo não encontrado"); 
             }
 
             _context.TiposProduto.Update(tipo);
-            _context.SaveChanges();
+            // Salva as alterações de forma assíncrona
+            await _context.SaveChangesAsync();
             
             return Ok("Alterações gravadas"); 
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<IEnumerable<TipoProduto>> DeleteProduct(int id, TipoProduto tipo)
+        public async Task<ActionResult> DeleteProduct(int id)
         {
-            if (!TipoExiste(id))
+            // Busca o tipo de produto pelo ID usando FindAsync
+            var tipo = await _context.TiposProduto.FindAsync(id);
+
+            if (tipo is null)
             {
                 return NotFound("Tipo não encontrado");
             }
 
             _context.TiposProduto.Remove(tipo);
-            _context.SaveChanges();
+            // Salva as mudanças de forma assíncrona após a remoção
+            await _context.SaveChangesAsync();
 
             return Ok("Tipo removido com sucesso");
         }
 
-        private bool TipoExiste(TipoProduto tipo)
+        // Método privado assíncrono para verificar se o TipoProduto existe com base no ID ou Nome
+        private async Task<bool> TipoExisteAsync(TipoProduto tipo)
         {
-            return _context.TiposProduto.Any(t => t.IdTipo == tipo.IdTipo || t.NomeTipo == tipo.NomeTipo);
+            return await _context.TiposProduto.AnyAsync(t => t.IdTipo == tipo.IdTipo || t.NomeTipo == tipo.NomeTipo);
         }
 
-        private bool TipoExiste(int id)
+        // Método privado assíncrono para verificar se o TipoProduto existe com base apenas no ID
+        private async Task<bool> TipoExisteAsync(int id)
         {
-            return _context.TiposProduto.Any(t => t.IdTipo != id);
+            return await _context.TiposProduto.AnyAsync(t => t.IdTipo == id);
         }
     }
 }

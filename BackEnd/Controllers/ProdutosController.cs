@@ -23,9 +23,10 @@ namespace BackEnd.Controllers
 
         //Rota para pegar todos os produtos
         [HttpGet]
-        public ActionResult<IEnumerable<Produto>> GetAllProducts()
+        public async Task<ActionResult<IEnumerable<Produto>>> GetAllProducts()
         {
-            var produtos = _context.Produtos.ToList(); //Pega todos os produtos e transforma numa lista
+            //Usando ToListAsync para buscar todos os produtos de forma assíncrona
+            var produtos = await _context.Produtos.ToListAsync();
 
             //Verifica se a lista está vazia
             if (produtos is null)
@@ -37,10 +38,10 @@ namespace BackEnd.Controllers
 
         //Rota para pegar um produto pelo seu ID
         [HttpGet("{id:int}")]
-        public ActionResult<IEnumerable<Produto>> GetProductById(int id)
+        public async Task<ActionResult<Produto>> GetProductById(int id)
         {
-            //Pega o Produto
-            var produto = _context.Produtos.FirstOrDefault(p => p.IdProduto == id);
+            //Usando FirstOrDefaultAsync para buscar o produto pelo ID de forma assíncrona
+            var produto = await _context.Produtos.FirstOrDefaultAsync(p => p.IdProduto == id);
 
             //Verifica se a variável está vazia
             if (produto is null)
@@ -52,57 +53,67 @@ namespace BackEnd.Controllers
 
         //Rota para adicionar um novo produto
         [HttpPost]
-        public ActionResult<IEnumerable<Produto>> AddNewProduct(Produto produto)
+        public async Task<ActionResult<Produto>> AddNewProduct(Produto produto)
         {
-            if (ProdutoExiste(produto))
+            //Usando o método assíncrono ProdutoExisteAsync para verificar a existência do produto
+            if (await ProdutoExisteAsync(produto))
             {
                 return BadRequest("Esse produto já existe com o mesmo ID ou Nome");
             }
 
             _context.Produtos.Add(produto);
-            _context.SaveChanges();
+            // Usa SaveChangesAsync para salvar o novo produto de forma assíncrona
+            await _context.SaveChangesAsync();
 
             return Ok("Novo produto criado");
         }
 
         //Método para atualizar um produto existente
         [HttpPut("{id:int}")]
-        public ActionResult<IEnumerable<Produto>> UpdateProduct(int id, Produto produto)
+        public async Task<ActionResult<Produto>> UpdateProduct(int id, Produto produto)
         {
-            if (!ProdutoExiste(id))
+            // Usa o método assíncrono ProdutoExisteAsync para verificar a existência do produto
+            if (!await ProdutoExisteAsync(id))
             {
                 return NotFound("Produto não encontrado");
             }
 
             _context.Produtos.Update(produto);
-            _context.SaveChanges();
+            // Usa SaveChangesAsync para salvar as alterações de forma assíncrona
+            await _context.SaveChangesAsync();
             
             return Ok("Alterações gravadas");        
         }
 
         //Método para deletar um produto
         [HttpDelete("{id}")]
-        public ActionResult<IEnumerable<Produto>> DeleteProduct(int id, Produto produto)
+        public async Task<ActionResult> DeleteProduct(int id)
         {
-            if (!ProdutoExiste(id))
+            // Usa FindAsync para buscar o produto pelo ID de forma assíncrona
+            var produto = await _context.Produtos.FindAsync(id);
+
+            if (produto is null)
             {
                 return NotFound("Produto não encontrado");
             }
 
             _context.Produtos.Remove(produto);
-            _context.SaveChanges();
+            // Usa SaveChangesAsync para deletar o produto de forma assíncrona
+            await _context.SaveChangesAsync();
 
             return Ok("Produto removido com sucesso");
         }
 
-        private bool ProdutoExiste(Produto produto)
+        // Método privado assíncrono para verificar se o Produto existe no banco de dados com base no ID ou Nome
+        private async Task<bool> ProdutoExisteAsync(Produto produto)
         {
-            return _context.Produtos.Any(t => t.IdProduto == produto.IdProduto || t.NomeProduto == produto.NomeProduto);
+            return await _context.Produtos.AnyAsync(t => t.IdProduto == produto.IdProduto || t.NomeProduto == produto.NomeProduto);
         }
 
-        private bool ProdutoExiste(int id)
+        // Método privado assíncrono para verificar se o Produto existe no banco de dados com base apenas no ID
+        private async Task<bool> ProdutoExisteAsync(int id)
         {
-            return _context.Produtos.Any(t => t.IdProduto != id);
+            return await _context.Produtos.AnyAsync(t => t.IdProduto == id);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BackEnd.Context;
 using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.Controllers
 {
@@ -22,9 +23,10 @@ namespace BackEnd.Controllers
 
         //Rota para pegar todos os pedidos
         [HttpGet]
-        public ActionResult<IEnumerable<Pedido>> GetAllPedidos()
+        public async Task<ActionResult<IEnumerable<Pedido>>> GetAllPedidos()
         {
-            var pedidos = _context.Pedidos.ToList(); //Pega todos os pedidos e transforma numa lista
+             //Usaando ToListAsync para buscar todos os pedidos de forma assíncrona
+            var pedidos = await _context.Pedidos.ToListAsync();
 
             //Verifica se a lista está vazia
             if (pedidos is null)
@@ -36,10 +38,13 @@ namespace BackEnd.Controllers
 
         //Rota para pegar um pedido pelo seu ID
         [HttpGet("{id:int}")]
-        public ActionResult<IEnumerable<Pedido>> GetPedidoById(int id, Pedido pedido)
+        public async Task<ActionResult<Pedido>> GetPedidoById(int id)
         {
+            //Usando FindAsync para buscar o pedido pelo ID de forma assíncrona
+            var pedido = await _context.Pedidos.FindAsync(id);
+            
             //Verifica se a variável está vazia
-            if (!PedidoExiste(id))
+            if (pedido is null)
             {
                 return NotFound($"O pedido {id} não existe");
             }
@@ -48,52 +53,60 @@ namespace BackEnd.Controllers
 
         //Rota para adicionar um novo pedido
         [HttpPost("{id:int}")]
-        public ActionResult<IEnumerable<Pedido>> AddNewPedido(int id, Pedido pedido)
+        public async Task<ActionResult<Pedido>> AddNewPedido(int id, Pedido pedido)
         {
-            if (PedidoExiste(id))
+            //Usando o método assíncrono PedidoExisteAsync para verificar a existência do pedido
+            if (await PedidoExisteAsync(id))
             {
                 return BadRequest($"Já existe um pedido com o id {id}");
             }
 
             _context.Pedidos.Add(pedido);
-            _context.SaveChanges();
+            //Usando SaveChangesAsync para salvar as mudanças de forma assíncrona
+            await _context.SaveChangesAsync();
 
             return Ok($"Pedido {id} criado com sucesso");
         }
 
         //Método para atualizar um pedido existente
         [HttpPut("{id:int}")]
-        public ActionResult<IEnumerable<Pedido>> UpdatePedido(int id, Pedido pedido)
+        public async Task<ActionResult<Pedido>> UpdatePedido(int id, Pedido pedido)
         {
-            if (!PedidoExiste(id))
+            if (!await PedidoExisteAsync(id))
             {
                 return NotFound($"O pedido {id} não foi encontrado");
             }
 
             _context.Pedidos.Update(pedido);
-            _context.SaveChanges();
+             //Usando SaveChangesAsync para salvar as alterações de forma assíncrona
+            await _context.SaveChangesAsync();
             
             return Ok($"Alterações gravadas no pedido {id}");        
         }
 
         //Método para deletar um pedido
         [HttpDelete("{id}")]
-        public ActionResult<IEnumerable<Pedido>> DeletePedido(int id, Pedido pedido)
+        public async Task<ActionResult<Pedido>> DeletePedido(int id)
         {
-            if (!PedidoExiste(id))
+            //Usando FindAsync para buscar o pedido pelo ID de forma assíncrona
+            var pedido = await _context.Pedidos.FindAsync(id);
+
+            if (pedido is null)
             {
                 return NotFound($"O pedido {id} não foi encontrado");
             }
 
             _context.Pedidos.Remove(pedido);
-            _context.SaveChanges();
+            //Usando SaveChangesAsync para deletar o pedido de forma assíncrona
+            await _context.SaveChangesAsync();
 
             return Ok($"Pedido {id} removido com sucesso");
         }
 
-        private bool PedidoExiste(int id)
+        //Método privado assíncrono para verificar se o pedido existe no banco de dados com base no ID
+        private async Task<bool> PedidoExisteAsync(int id)
         {
-            return _context.Pedidos.Any(p => p.IdPedido != id);
+            return await _context.Pedidos.AnyAsync(p => p.IdPedido != id);
         }
     }
 }
