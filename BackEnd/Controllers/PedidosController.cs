@@ -46,7 +46,7 @@ namespace BackEnd.Controllers
             //Verifica se a variável está vazia
             if (pedido is null)
             {
-                return NotFound(new RespostaRequisicao<Pedido>($"O pedido com o id \"{id}\" não foi encontrado na base de dados", null));
+                return NotFound(new RespostaRequisicao<Pedido>($"O pedido com o id '{id}' não foi encontrado na base de dados", null));
             }
             return Ok(new RespostaRequisicao<Pedido>($"Pedido {id} encontrado com sucesso", pedido));
         }
@@ -58,14 +58,14 @@ namespace BackEnd.Controllers
             //Usando o método assíncrono PedidoExisteAsync para verificar a existência do pedido
             if (await PedidoExisteAsync(id))
             {
-                return BadRequest(new RespostaRequisicao<Pedido>($"Já existe um pedido com o mesmo ID \"{id}\"", null));
+                return BadRequest(new RespostaRequisicao<Pedido>($"Já existe um pedido com o mesmo ID '{id}'", null));
             }
 
             _context.Pedidos.Add(pedido);
             //Usando SaveChangesAsync para salvar as mudanças de forma assíncrona
             await _context.SaveChangesAsync();
 
-            return Ok(new RespostaRequisicao<Pedido>("Novo produto adicionado com sucesso!", pedido));
+            return Ok(new RespostaRequisicao<Pedido>("Novo pedido adicionado com sucesso!", pedido));
         }
 
         //Método para atualizar um pedido existente

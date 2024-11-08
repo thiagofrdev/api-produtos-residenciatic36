@@ -46,7 +46,7 @@ namespace BackEnd.Controllers
             //Verifica se a variável está vazia
             if (produto is null)
             {
-                return NotFound(new RespostaRequisicao<Produto>($"O produto com o id \"{id}\" não foi encontrado na base de dados", null));
+                return NotFound(new RespostaRequisicao<Produto>($"O produto com o id '{id}' não foi encontrado na base de dados", null));
             }
             return Ok(new RespostaRequisicao<Produto>($"Produto {id} encontrado com sucesso", produto));
         }

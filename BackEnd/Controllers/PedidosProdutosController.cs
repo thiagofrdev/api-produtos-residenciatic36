@@ -46,9 +46,9 @@ namespace BackEnd.Controllers
             //Verifica se a variável está vazia
             if (pedidoProduto is null)
             {
-                return NotFound(new RespostaRequisicao<PedidoProduto>($"A relação Pedido/Produto com o id \"{id}\" não foi encontrada na base de dados", null));
+                return NotFound(new RespostaRequisicao<PedidoProduto>($"A relação Pedido/Produto com o id '{id}' não foi encontrada na base de dados", null));
             }
-            return Ok(new RespostaRequisicao<PedidoProduto>($"A relação Pedido/Produto {id}  foi encontrada com sucesso", pedidoProduto));
+            return Ok(new RespostaRequisicao<PedidoProduto>($"A relação Pedido/Produto {id} foi encontrada com sucesso", pedidoProduto));
         }
 
         //Rota para adicionar um novo PedidoProduto

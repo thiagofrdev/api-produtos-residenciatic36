@@ -39,7 +39,7 @@ namespace BackEnd.Controllers
 
             if (tipo is null)
             {
-                return NotFound(new RespostaRequisicao<TipoProduto>($"O tipo com o id \"{id}\" não foi encontrado na base de dados", null));
+                return NotFound(new RespostaRequisicao<TipoProduto>($"O tipo com o id '{id}' não foi encontrado na base de dados", null));
             }
             return Ok(new RespostaRequisicao<TipoProduto>("Tipo encontrado com sucesso", tipo));
         }
