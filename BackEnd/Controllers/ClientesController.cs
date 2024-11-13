@@ -86,10 +86,13 @@ namespace BackEnd.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<RespostaRequisicao<Cliente>>> DeleteCliente(int id, Cliente cliente)
+        public async Task<ActionResult<RespostaRequisicao<Cliente>>> DeleteCliente(int id)
         {
+            // Usa FirstOrDefaultAsync para buscar o cliente pelo ID de forma assíncrona
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.IdCliente == id);
+
             // Usa o método assíncrono ClienteExisteAsync para verificar se o cliente existe
-            if (!await ClienteExisteAsync(id))
+            if (cliente is null)
             {
                 return NotFound(new RespostaRequisicao<Cliente>($"Cliente com id {id} não encontrado", null));
             }
