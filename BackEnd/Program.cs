@@ -1,4 +1,4 @@
-using BackEnd.Context;
+using BackEnd.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +12,7 @@ builder.Services.AddSwaggerGen();
 
 //Ligação com o Banco de Dados
 string conexao = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApiContext>(options => options.UseNpgsql(conexao));
+builder.Services.AddDbContext<ApiContext>(options => {options.UseNpgsql(conexao, b => b.MigrationsAssembly("BackEnd.Infrastructure"));});
 
 var app = builder.Build();
 

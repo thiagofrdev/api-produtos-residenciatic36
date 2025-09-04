@@ -1,15 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using BackEnd.Context;
-
-namespace BackEnd.Models
+namespace BackEnd.Core.Domain
 {
     public class Cliente
     {
-        [Key()]
         public int IdCliente { get; set; }
         public string? NomeCliente { get; set; }
         public string? EmailCliente { get; set; }
